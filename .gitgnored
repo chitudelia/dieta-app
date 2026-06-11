@@ -1,0 +1,5 @@
+.streamlit/secrets.toml
+dieta.db
+dieta_salvata.json
+__pycache__/
+*.pyc
