@@ -273,10 +273,7 @@ elif st.session_state.pagina == "dieta":
         if st.session_state.dieta is None:
             with st.spinner("Se generează dieta ta personalizată... ⏳"):
                 try:
-                    # Citește cheia din Railway Variables sau secrets.toml
-                    cheie_debug = get_secret("OPENAI_API_KEY")
-                    st.info(f"🔍 DEBUG: cheia folosită se termină în ...{cheie_debug[-6:]} (lungime: {len(cheie_debug)})")
-                    client = OpenAI(api_key=cheie_debug)
+                    client = OpenAI(api_key=get_secret("OPENAI_API_KEY"))
 
                     prompt = f"""Creează un plan de dietă săptămânal personalizat pentru:
 - Nume: {p['nume']}, {p['sex']}, {p['varsta']} ani
