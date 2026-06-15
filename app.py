@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 import json
 import os
+import re
 from database import inregistrare, login, salveaza_greutate, get_greutati, salveaza_jurnal, get_jurnal_azi, salveaza_profil, get_profil
 
 # Configurare pagina
@@ -18,6 +19,11 @@ def get_secret(key):
         return st.secrets[key]
     except:
         return ""
+
+# Validare email - accepta doar furnizori cunoscuti
+def email_valid(email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@(gmail|yahoo|outlook|hotmail|icloud|live|protonmail)\.(com|ro|net|org)$'
+    return re.match(pattern, email) is not None
 
 # CSS custom tema portocalie
 st.markdown("""
@@ -131,7 +137,9 @@ if st.session_state.pagina == "auth":
 
         if st.button("Creează cont 📝"):
             if nume_reg and email_reg and parola_reg and parola_reg2:
-                if parola_reg != parola_reg2:
+                if not email_valid(email_reg):
+                    st.error("❌ Adresa de email nu este validă! Folosește un email real (ex: gmail.com, yahoo.com, outlook.com).")
+                elif parola_reg != parola_reg2:
                     st.error("❌ Parolele nu coincid!")
                 elif len(parola_reg) < 6:
                     st.error("❌ Parola trebuie să aibă cel puțin 6 caractere!")
@@ -428,7 +436,11 @@ Răspunde EXACT în acest format JSON, nimic altceva în afară de JSON:
         email = st.text_input("Adresa ta de email:", value=p['email'])
 
         if st.button("Trimite raport 📧"):
-            if email:
+            if not email:
+                st.error("Te rog introduceți adresa de email!")
+            elif not email_valid(email):
+                st.error("❌ Adresa de email nu este validă! Folosește un email real (ex: gmail.com, yahoo.com, outlook.com).")
+            else:
                 with st.spinner("Se trimite emailul... ⏳"):
                     from raportul import trimite_raport
                     rezultat = trimite_raport(
@@ -445,8 +457,6 @@ Răspunde EXACT în acest format JSON, nimic altceva în afară de JSON:
                         st.success(f"✅ Raportul a fost trimis la {email}!")
                     else:
                         st.error(f"Eroare: {rezultat}")
-            else:
-                st.error("Te rog introduceți adresa de email!")
 
     st.markdown("---")
     col1, col2 = st.columns(2)
