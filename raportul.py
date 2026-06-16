@@ -82,7 +82,7 @@ def trimite_raport(gmail_user, gmail_password, email_destinatar, profil, target,
 
     # Trimite emailul prin Gmail
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 587) as server:
             server.login(gmail_user, gmail_password)
             server.sendmail(gmail_user, email_destinatar, msg.as_string())
         return True
