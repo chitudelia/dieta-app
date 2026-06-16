@@ -56,4 +56,24 @@ def trimite_raport(gmail_user, gmail_password, email_destinatar, profil, target,
         <h2>🗓️ Jurnal de azi</h2>
         <pre>{jurnal_text}</pre>
         <h2>🥗 Dieta ta</h2>
-        <p>{dieta[:500]}..
+        <p>{dieta[:500]}...</p>
+        <hr>
+        <p style="color: #888; font-size: 12px;">
+            Trimis automat de aplicația Dieta Personalizată 💪
+        </p>
+    </body>
+    </html>
+    """
+    msg.attach(MIMEText(html, "html"))
+
+    # Trimite emailul prin Gmail cu STARTTLS pe portul 587
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(gmail_user, gmail_password)
+            server.sendmail(gmail_user, email_destinatar, msg.as_string())
+        return True
+    except Exception as e:
+        return str(e)
