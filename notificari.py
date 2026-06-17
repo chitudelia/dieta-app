@@ -86,11 +86,11 @@ def verificare_progres_saptamanal():
         print(f"Eroare la verificare progres: {e}")
 
 # Programare notificări zilnice
-schedule.every().day.at("08:00").do(notificare_meniu_dimineata)
-schedule.every().day.at("12:30").do(notificare_pranz)
-schedule.every().day.at("15:00").do(notificare_apa)
-schedule.every().day.at("19:00").do(notificare_cina)
-schedule.every().day.at("21:00").do(raport_zilnic)
+schedule.every().day.at("05:00").do(notificare_meniu_dimineata)
+schedule.every().day.at("09:30").do(notificare_pranz)
+schedule.every().day.at("12:00").do(notificare_apa)
+schedule.every().day.at("16:00").do(notificare_cina)
+schedule.every().day.at("18:00").do(raport_zilnic)
 
 # Verificare progres în fiecare duminică la 20:00
 schedule.every().sunday.at("20:00").do(verificare_progres_saptamanal)
