@@ -314,6 +314,12 @@ Răspunde EXACT în acest format JSON, nimic altceva în afară de JSON:
                     )
 
                     raw = response.choices[0].message.content
+                    raw = raw.strip()
+                    if raw.startswith("```"):
+                        raw = raw.split("```")[1]
+                        if raw.startswith("json"):
+                            raw = raw[4:]
+                    raw = raw.strip()
                     st.session_state.dieta_json = json.loads(raw)
                     st.session_state.dieta = raw
 
