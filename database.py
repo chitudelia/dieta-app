@@ -1,16 +1,19 @@
 import sqlite3
 import hashlib
+import os
 from datetime import datetime
 
+DB_PATH = "/app/data/dieta.db"
+
 def conectare():
-    conn = sqlite3.connect("dieta.db")
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
     return conn
 
 def creare_tabele():
     conn = conectare()
     c = conn.cursor()
 
-    # Tabel utilizatori
     c.execute("""
         CREATE TABLE IF NOT EXISTS utilizatori (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,7 +24,6 @@ def creare_tabele():
         )
     """)
 
-    # Tabel profiluri — salvează profilul și targetul fiecărui user
     c.execute("""
         CREATE TABLE IF NOT EXISTS profiluri (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +41,6 @@ def creare_tabele():
         )
     """)
 
-    # Tabel greutăți
     c.execute("""
         CREATE TABLE IF NOT EXISTS greutati (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,7 +50,6 @@ def creare_tabele():
         )
     """)
 
-    # Tabel jurnal alimentar
     c.execute("""
         CREATE TABLE IF NOT EXISTS jurnal (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -89,7 +89,6 @@ def login(email, parola):
     conn.close()
     return utilizator
 
-# Salvează sau actualizează profilul unui utilizator
 def salveaza_profil(email, varsta, inaltime, greutate, sex, obiectiv, kg_target, luni, alimente, alergii, dieta):
     conn = conectare()
     c = conn.cursor()
@@ -108,7 +107,6 @@ def salveaza_profil(email, varsta, inaltime, greutate, sex, obiectiv, kg_target,
     conn.commit()
     conn.close()
 
-# Returnează profilul salvat al unui utilizator
 def get_profil(email):
     conn = conectare()
     c = conn.cursor()
@@ -159,7 +157,6 @@ def get_jurnal_azi(email):
 
 creare_tabele()
 
-# Verifică progresul din ultimele 7 zile
 def analizeaza_progres(email):
     conn = conectare()
     c = conn.cursor()
@@ -169,7 +166,6 @@ def analizeaza_progres(email):
     conn.close()
     return rezultat
 
-# Salvează dieta reconfigurată
 def actualizeaza_dieta(email, dieta_noua):
     conn = conectare()
     c = conn.cursor()
@@ -177,7 +173,6 @@ def actualizeaza_dieta(email, dieta_noua):
     conn.commit()
     conn.close()
 
-# Returnează toți utilizatorii cu profil complet
 def get_toti_utilizatorii():
     conn = conectare()
     c = conn.cursor()
