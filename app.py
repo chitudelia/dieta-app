@@ -328,6 +328,7 @@ Răspunde EXACT în acest format JSON, nimic altceva în afară de JSON:
 
                 except Exception as e:
                     st.error(f"Eroare: {e}")
+                    st.error(f"Răspuns OpenAI: {raw if 'raw' in locals() else 'N/A'}")
                     st.stop()
 
         if st.session_state.dieta_json:
