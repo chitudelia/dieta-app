@@ -294,7 +294,7 @@ elif st.session_state.pagina == "dieta":
 Răspunde EXACT în acest format JSON, nimic altceva în afară de JSON:
 {{
     "calorii_zilnice": 1800,
-    "timp_estimat_saptamani": 8,
+    "timp_estimat_saptamani": {t['luni'] * 4},
     "meniu": {{
         "Luni": {{"mic_dejun": "...", "pranz": "...", "cina": "...", "gustare": "..."}},
         "Marti": {{"mic_dejun": "...", "pranz": "...", "cina": "...", "gustare": "..."}},
