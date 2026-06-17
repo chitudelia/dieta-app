@@ -1,6 +1,6 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import os
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 from datetime import datetime
 
 def trimite_raport(gmail_user, gmail_password, email_destinatar, profil, target, dieta, greutati, jurnal_azi):
@@ -21,20 +21,9 @@ def trimite_raport(gmail_user, gmail_password, email_destinatar, profil, target,
     # Jurnalul de azi
     if jurnal_azi:
         mic_dejun, pranz, cina, apa = jurnal_azi
-        jurnal_text = f"""
-        🍳 Mic dejun: {"✅" if mic_dejun else "❌"}
-        🥗 Prânz: {"✅" if pranz else "❌"}
-        🍽️ Cină: {"✅" if cina else "❌"}
-        💧 Pahare de apă: {apa}/8
-        """
+        jurnal_text = f"Mic dejun: {'✅' if mic_dejun else '❌'} | Prânz: {'✅' if pranz else '❌'} | Cină: {'✅' if cina else '❌'} | Apă: {apa}/8 pahare"
     else:
         jurnal_text = "Nu ai completat jurnalul de azi."
-
-    # Construiește emailul
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"📊 Raportul tău zilnic de dietă - {datetime.now().strftime('%d/%m/%Y')}"
-    msg["From"] = gmail_user
-    msg["To"] = email_destinatar
 
     # Conținutul emailului în HTML
     html = f"""
@@ -54,7 +43,7 @@ def trimite_raport(gmail_user, gmail_password, email_destinatar, profil, target,
         <h2>📊 Progres</h2>
         <p>{progres_text}</p>
         <h2>🗓️ Jurnal de azi</h2>
-        <pre>{jurnal_text}</pre>
+        <p>{jurnal_text}</p>
         <h2>🥗 Dieta ta</h2>
         <p>{dieta[:500]}...</p>
         <hr>
@@ -64,16 +53,17 @@ def trimite_raport(gmail_user, gmail_password, email_destinatar, profil, target,
     </body>
     </html>
     """
-    msg.attach(MIMEText(html, "html"))
 
-    # Trimite emailul prin Gmail cu STARTTLS pe portul 587
     try:
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(gmail_user, gmail_password)
-            server.sendmail(gmail_user, email_destinatar, msg.as_string())
+        sendgrid_key = os.environ.get("SENDGRID_API_KEY", "")
+        message = Mail(
+            from_email="chitu.delia123@gmail.com",
+            to_emails=email_destinatar,
+            subject=f"📊 Raportul tău zilnic de dietă - {datetime.now().strftime('%d/%m/%Y')}",
+            html_content=html
+        )
+        sg = SendGridAPIClient(sendgrid_key)
+        sg.send(message)
         return True
     except Exception as e:
         return str(e)
