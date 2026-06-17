@@ -87,7 +87,7 @@ if st.session_state.pagina == "auth":
         email_login = st.text_input("Email", key="email_login")
         parola_login = st.text_input("Parolă", type="password", key="parola_login")
 
-        if st.button("Intră în cont 🔑"):
+        if st.button("Intră în cont "):
             if email_login and parola_login:
                 utilizator = login(email_login, parola_login)
                 if utilizator:
@@ -170,7 +170,7 @@ elif st.session_state.pagina == "profil":
     st.markdown("---")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Deconectare 🚪"):
+        if st.button("Deconectare "):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
@@ -206,11 +206,11 @@ elif st.session_state.pagina == "profil":
             salveaza_greutate(u['email'], greutate)
 
             if imc_color == "success":
-                st.success(f"📊 IMC-ul tău: **{round(imc, 1)}** — {imc_categorie}")
+                st.success(f" IMC-ul tău: **{round(imc, 1)}** — {imc_categorie}")
             elif imc_color == "warning":
-                st.warning(f"📊 IMC-ul tău: **{round(imc, 1)}** — {imc_categorie}")
+                st.warning(f" IMC-ul tău: **{round(imc, 1)}** — {imc_categorie}")
             else:
-                st.error(f"📊 IMC-ul tău: **{round(imc, 1)}** — {imc_categorie}")
+                st.error(f" IMC-ul tău: **{round(imc, 1)}** — {imc_categorie}")
 
             st.session_state.pagina = "target"
             st.rerun()
@@ -218,7 +218,7 @@ elif st.session_state.pagina == "profil":
 # ---- PAGINA 2: TARGET ----
 elif st.session_state.pagina == "target":
     p = st.session_state.profil
-    st.markdown("<h1>🎯 Obiectivul tău</h1>", unsafe_allow_html=True)
+    st.markdown("<h1> Obiectivul tău</h1>", unsafe_allow_html=True)
     st.subheader(f"Ce vrei să obții, {p['nume']}?")
 
     if "imc" in p:
@@ -356,11 +356,11 @@ Răspunde EXACT în acest format JSON, nimic altceva în afară de JSON:
         st.markdown("---")
         ora = datetime.now().hour
         if 6 <= ora < 10:
-            st.success("🌅 Bună dimineața! E timpul pentru micul dejun!")
+            st.success(" Bună dimineața! E timpul pentru micul dejun!")
         elif 12 <= ora < 14:
-            st.success("☀️ E ora prânzului! Nu uita să mănânci!")
+            st.success(" E ora prânzului! Nu uita să mănânci!")
         elif 18 <= ora < 20:
-            st.success("🌆 E timpul pentru cină!")
+            st.success(" E timpul pentru cină!")
         else:
             st.info("💧 Nu uita să bei apă!")
 
@@ -368,7 +368,7 @@ Răspunde EXACT în acest format JSON, nimic altceva în afară de JSON:
         st.markdown("<h1>📊 Grafic de progres</h1>", unsafe_allow_html=True)
 
         if "imc" in p:
-            st.info(f"📊 IMC curent: **{p['imc']}** — {p['imc_categorie']}")
+            st.info(f" IMC curent: **{p['imc']}** — {p['imc_categorie']}")
 
         greutate_azi = st.number_input(
             "Greutatea de azi (kg):",
@@ -376,11 +376,11 @@ Răspunde EXACT în acest format JSON, nimic altceva în afară de JSON:
             value=float(p['greutate'])
         )
 
-        if st.button("Salvează greutatea ✅"):
+        if st.button("Salvează greutatea "):
             salveaza_greutate(p['email'], greutate_azi)
             inaltime_m = p['inaltime'] / 100
             imc_nou = round(greutate_azi / (inaltime_m ** 2), 1)
-            st.success(f"✅ Greutatea salvată! IMC nou: **{imc_nou}**")
+            st.success(f" Greutatea salvată! IMC nou: **{imc_nou}**")
             st.rerun()
 
         date_greutati = get_greutati(p['email'])
@@ -414,14 +414,14 @@ Răspunde EXACT în acest format JSON, nimic altceva în afară de JSON:
 
         apa = st.slider("💧 Pahare de apă băute azi:", min_value=0, max_value=12, value=int(apa_val))
 
-        if st.button("Salvează jurnalul 💾"):
+        if st.button("Salvează jurnalul "):
             salveaza_jurnal(p['email'], mic_dejun, pranz, cina, apa)
             st.success("✅ Jurnal salvat!")
 
         mese_bifate = sum([mic_dejun, pranz, cina])
         st.markdown("---")
         if mese_bifate == 3 and apa >= 8:
-            st.success("🎉 Ziua perfectă! Ai mâncat toate mesele și ai băut suficientă apă!")
+            st.success(" Ziua perfectă! Ai mâncat toate mesele și ai băut suficientă apă! 🎉 ")
         elif mese_bifate == 3:
             st.warning("✅ Ai mâncat toate mesele! Mai bea puțină apă!")
         elif apa >= 8:

@@ -1,52 +1,45 @@
 import json
 import os
 import requests
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from openai import OpenAI
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 from database import get_toti_utilizatorii, analizeaza_progres, actualizeaza_dieta
 
 # Configurare — citește din variabile de mediu
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
 GMAIL_USER = os.environ.get("GMAIL_USER", "")
-GMAIL_PASSWORD = os.environ.get("GMAIL_PASSWORD", "")
 
 def trimite_telegram(chat_id, mesaj):
-    """Trimite mesaj pe Telegram"""
     if not chat_id:
         return
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     requests.post(url, data={"chat_id": chat_id, "text": mesaj, "parse_mode": "HTML"})
 
 def trimite_email(email_destinatar, subiect, continut_html):
-    """Trimite email cu noua dietă"""
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subiect
-        msg["From"] = GMAIL_USER
-        msg["To"] = email_destinatar
-        msg.attach(MIMEText(continut_html, "html"))
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(GMAIL_USER, GMAIL_PASSWORD)
-            server.sendmail(GMAIL_USER, email_destinatar, msg.as_string())
+        message = Mail(
+            from_email=GMAIL_USER,
+            to_emails=email_destinatar,
+            subject=subiect,
+            html_content=continut_html
+        )
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        sg.send(message)
         return True
     except Exception as e:
         print(f"Eroare email: {e}")
         return False
 
 def analizeaza_trend(inregistrari, obiectiv):
-    """
-    Analizează dacă utilizatorul face progres.
-    Returnează: 'progres_bun', 'stagnare', 'regres'
-    """
     if len(inregistrari) < 2:
         return 'date_insuficiente'
 
-    greutate_veche = inregistrari[-1][1]  # cea mai veche
-    greutate_noua = inregistrari[0][1]    # cea mai recentă
+    greutate_veche = inregistrari[-1][1]
+    greutate_noua = inregistrari[0][1]
     diferenta = greutate_noua - greutate_veche
 
     if obiectiv == "Slăbire":
@@ -70,9 +63,6 @@ def analizeaza_trend(inregistrari, obiectiv):
             return 'stagnare'
 
 def reconfigureaza_dieta(utilizator, trend, inregistrari):
-    """
-    Folosește AI să genereze o dietă nouă bazată pe progresul actual
-    """
     email, telegram_id, greutate_initiala, obiectiv, kg_target, luni, alimente, alergii, varsta, inaltime, sex = utilizator
 
     greutate_curenta = inregistrari[0][1] if inregistrari else greutate_initiala
@@ -125,42 +115,30 @@ Răspunde EXACT în acest format JSON:
         raw = response.choices[0].message.content
         dieta_noua = json.loads(raw)
 
-        # Salvează noua dietă în baza de date
         actualizeaza_dieta(email, raw)
 
-        # Trimite email
         email_html = f"""
         <html>
         <body style="font-family: Arial; max-width: 600px; margin: auto; padding: 20px;">
-            <h1 style="color: #FF6B35;">🔄 Dieta ta a fost reconfigurată!</h1>
+            <h1 style="color: #FF6B35;"> Dieta ta a fost reconfigurată!</h1>
             <p>Bună ziua,</p>
             <p>Am analizat progresul tău din ultimele 7 zile și am observat că <b>{motiv}</b>.</p>
             <p>De aceea, am reconfigurat dieta ta pentru a se adapta mai bine metabolismului tău.</p>
-
             <h2 style="color: #FF6B35;">📊 Ce s-a schimbat:</h2>
             <p>{dieta_noua['modificari_principale']}</p>
-
             <h2 style="color: #FF6B35;">🔥 Noile calorii zilnice: {dieta_noua['calorii_zilnice']} kcal</h2>
             <h2 style="color: #FF6B35;">⏱️ Timp estimat nou: {dieta_noua['timp_estimat_saptamani']} săptămâni</h2>
-
             <h2 style="color: #FF6B35;">🥗 Noul tău plan săptămânal:</h2>
             {"".join([f"<h3>📅 {zi}</h3><p>🍳 <b>Mic dejun:</b> {meniu['mic_dejun']}<br>🥗 <b>Prânz:</b> {meniu['pranz']}<br>🍽️ <b>Cină:</b> {meniu['cina']}<br>🍎 <b>Gustare:</b> {meniu['gustare']}</p>" for zi, meniu in dieta_noua['meniu'].items()])}
-
             <h2 style="color: #FF6B35;">💡 Sfaturi:</h2>
             <p>{dieta_noua['sfaturi']}</p>
-
             <p style="color: #888; font-size: 12px;">Trimis automat de Dieta Personalizată 💪</p>
         </body>
         </html>
         """
 
-        trimite_email(
-            email,
-            "🔄 Dieta ta a fost reconfigurată automat!",
-            email_html
-        )
+        trimite_email(email, "🔄 Dieta ta a fost reconfigurată automat!", email_html)
 
-        # Trimite Telegram
         telegram_msg = f"""🔄 <b>Dieta ta a fost reconfigurată!</b>
 
 Am observat că {motiv}.
@@ -173,7 +151,7 @@ Verifică emailul pentru planul complet! 📧"""
 
         trimite_telegram(telegram_id, telegram_msg)
 
-        print(f"✅ Dietă reconfigurată pentru {email}")
+        print(f" Dietă reconfigurată pentru {email}")
         return True
 
     except Exception as e:
@@ -181,9 +159,6 @@ Verifică emailul pentru planul complet! 📧"""
         return False
 
 def verifica_toti_utilizatorii():
-    """
-    Verifică progresul tuturor utilizatorilor și reconfigurează dacă e nevoie
-    """
     print(f"🔍 Verificare progres utilizatori - {datetime.now().strftime('%d/%m/%Y %H:%M')}")
     utilizatori = get_toti_utilizatorii()
 
@@ -195,7 +170,6 @@ def verifica_toti_utilizatorii():
         email = utilizator[0]
         obiectiv = utilizator[3]
 
-        # Obține ultimele 7 înregistrări de greutate
         inregistrari = analizeaza_progres(email)
 
         if len(inregistrari) < 7:
@@ -203,13 +177,13 @@ def verifica_toti_utilizatorii():
             continue
 
         trend = analizeaza_trend(inregistrari, obiectiv)
-        print(f"📊 {email} — trend: {trend}")
+        print(f" {email} — trend: {trend}")
 
         if trend in ['regres', 'stagnare']:
             print(f"🔄 Reconfigurare dietă pentru {email}...")
             reconfigureaza_dieta(utilizator, trend, inregistrari)
         else:
-            print(f"✅ {email} — progres bun, nicio schimbare necesară")
+            print(f" {email} — progres bun, nicio schimbare necesară")
 
 if __name__ == "__main__":
     verifica_toti_utilizatorii()
