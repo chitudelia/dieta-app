@@ -113,6 +113,12 @@ Răspunde EXACT în acest format JSON:
         )
 
         raw = response.choices[0].message.content
+        raw = raw.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        raw = raw.strip()
         dieta_noua = json.loads(raw)
 
         actualizeaza_dieta(email, raw)
